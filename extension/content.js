@@ -10,4 +10,8 @@ for (let i = 0; i < images.length; i++) {
     console.log("Width:", images[i].width);
     console.log("Height:", images[i].height);
     console.log("Alt text:", images[i].alt);
+
+    if (images[i].width > 500 && images[i].height > 500) {
+        console.log("Possible manga image:", images[i]);
+    }
 }
