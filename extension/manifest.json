@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Manga Translator",
+  "version": "1.0.0",
+  "description": "Translate text from manga images.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}

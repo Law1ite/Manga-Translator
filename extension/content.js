@@ -1,0 +1,1 @@
+console.log("Manga Translator content script loaded.");
