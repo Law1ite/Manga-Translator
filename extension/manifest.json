@@ -5,17 +5,18 @@
   "description": "Translate text from manga images.",
 
   "icons": {
-    "16": "icons/logo.png",
-    "48": "icons/logo.png",
-    "128": "icons/logo.png"
+    "16": "icons/crest-16.png",
+    "32": "icons/crest-32.png",
+    "48": "icons/crest-48.png",
+    "128": "icons/crest-128.png"
   },
-
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icons/logo.png",
-      "32": "icons/logo.png",
-      "48": "icons/logo.png"
+      "16": "icons/crest-16.png",
+      "32": "icons/crest-32.png",
+      "48": "icons/crest-48.png",
+      "128": "icons/crest-128.png"
     }
   },
 
