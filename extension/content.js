@@ -11,7 +11,15 @@ for (let i = 0; i < images.length; i++) {
     console.log("Height:", images[i].height);
     console.log("Alt text:", images[i].alt);
 
-    if (images[i].width > 500 && images[i].height > 500) {
-        console.log("Possible manga image:", images[i]);
-    }
+    const aspectRatio = images[i].width / images[i].height;
+    console.log("Aspect ratio:", aspectRatio);
+
+    if (
+    images[i].width > 500 &&
+    images[i].height > 500 &&
+    aspectRatio >= 0.4 &&
+    aspectRatio <= 1.0
+) {
+    console.log("Possible manga image:", images[i]);
+}
 }
