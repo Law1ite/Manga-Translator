@@ -4,6 +4,8 @@ const images = document.querySelectorAll("img");
 
 console.log(`Found ${images.length} images on this page.`);
 
+const candidates = [];
+
 for (let i = 0; i < images.length; i++) {
     console.log("Image", i);
 
@@ -24,7 +26,15 @@ for (let i = 0; i < images.length; i++) {
     console.log("Displayed size:", rect.width, rect.height);
     console.log("Visible:", isVisible);
 
-    if (isVisible && images[i].naturalWidth > 300 && images[i].naturalHeight > 300) {
+    if (
+        isVisible &&
+        images[i].naturalWidth > 300 &&
+        images[i].naturalHeight > 300
+    ) {
+        candidates.push(images[i]);
+
         console.log("Possible manga image:", i);
     }
 }
+
+console.log("Total candidates:", candidates.length);
