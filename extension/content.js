@@ -18,14 +18,13 @@ for (let i = 0; i < images.length; i++) {
 
     const rect = images[i].getBoundingClientRect();
 
+    const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+
     console.log("Position:", rect.x, rect.y);
     console.log("Displayed size:", rect.width, rect.height);
-    console.log("Top:", rect.top);
-    console.log("Bottom:", rect.bottom);
+    console.log("Visible:", isVisible);
 
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-        console.log("VISIBLE");
-    } else {
-        console.log("NOT VISIBLE");
+    if (isVisible && images[i].naturalWidth > 300 && images[i].naturalHeight > 300) {
+        console.log("Possible manga image:", i);
     }
 }
