@@ -28,11 +28,11 @@ for (let i = 0; i < images.length; i++) {
 
     if (
         isVisible &&
-        images[i].naturalWidth > 300 &&
-        images[i].naturalHeight > 300
+        rect.width > 250 &&
+        rect.height > 250 &&
+        aspectRatio < 1
     ) {
         candidates.push(images[i]);
-
         console.log("Possible manga image:", i);
     }
 }
