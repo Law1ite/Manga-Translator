@@ -34,6 +34,7 @@ for (let i = 0; i < images.length; i++) {
     ) {
         candidates.push(images[i]);
         console.log("Possible manga image:", i);
+        console.log("Candidate URL:", images[i].src);
     }
 }
 
