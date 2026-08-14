@@ -39,3 +39,25 @@ for (let i = 0; i < images.length; i++) {
 }
 
 console.log("Total candidates:", candidates.length);
+
+if (candidates.length > 0) {
+    fetch(candidates[0].src)
+        .then(response => {
+            console.log("Image response:", response);
+            console.log("Status:", response.status);
+
+            return response.blob();
+        })
+        .then(blob => {
+            console.log("Image blob:", blob);
+            console.log("Blob size:", blob.size);
+            console.log("Blob type:", blob.type);
+
+            const imageURL = URL.createObjectURL(blob);
+
+            console.log("Temporary image URL:", imageURL);
+        })
+        .catch(error => {
+            console.error("Failed to fetch image:", error);
+        });
+}
