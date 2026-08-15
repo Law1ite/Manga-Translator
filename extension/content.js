@@ -20,7 +20,11 @@ function processImage(image) {
         rect.bottom > 0;
 
     console.log("Displayed size:", rect.width, rect.height);
-    console.log("Natural size:", image.naturalWidth, image.naturalHeight);
+    console.log(
+        "Natural size:",
+        image.naturalWidth,
+        image.naturalHeight
+    );
     console.log("Aspect ratio:", aspectRatio);
     console.log("Visible:", isVisible);
 
@@ -52,24 +56,76 @@ function processImage(image) {
 
                 loadedImage.onload = () => {
                     console.log("Image loaded successfully.");
+
                     console.log(
                         "Natural width:",
                         loadedImage.naturalWidth
                     );
+
                     console.log(
                         "Natural height:",
                         loadedImage.naturalHeight
                     );
+
+                    loadedImage.dataset.mangaTranslatorImage = "true";
+
+                    console.log(
+                        "Image ready for processing:",
+                        loadedImage
+                    );
+
+                    // Create canvas
+                    const canvas = document.createElement("canvas");
+
+                    canvas.width = loadedImage.naturalWidth;
+                    canvas.height = loadedImage.naturalHeight;
+
+                    const context = canvas.getContext("2d");
+
+                    // Draw image onto canvas
+                    context.drawImage(
+                        loadedImage,
+                        0,
+                        0
+                    );
+
+                    console.log("Canvas created.");
+                    console.log("Canvas width:", canvas.width);
+                    console.log("Canvas height:", canvas.height);
+
+                    // Read pixel data
+                    const imageData = context.getImageData(
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    );
+
+                    console.log("Pixel data:", imageData);
+                    console.log("Pixel data length:",imageData.data.length);
+                    const firstPixel = {
+                                        red: imageData.data[0],
+                                        green: imageData.data[1],
+                                        blue: imageData.data[2],
+                                        alpha: imageData.data[3]
+                                    };
+
+                    console.log("First pixel:", firstPixel);
                 };
 
                 loadedImage.onerror = () => {
-                    console.error("Failed to load image from Blob URL.");
+                    console.error(
+                        "Failed to load image from Blob URL."
+                    );
                 };
 
                 loadedImage.src = imageURL;
             })
             .catch(error => {
-                console.error("Failed to fetch image:", error);
+                console.error(
+                    "Failed to fetch image:",
+                    error
+                );
             });
     }
 }
@@ -77,7 +133,9 @@ function processImage(image) {
 function findImages() {
     const images = document.querySelectorAll("img");
 
-    console.log(`Found ${images.length} images on this page.`);
+    console.log(
+        `Found ${images.length} images on this page.`
+    );
 
     images.forEach(image => {
         processImage(image);
