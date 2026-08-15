@@ -1,29 +1,27 @@
 console.log("Manga Translator content script loaded.");
 
-const images = document.querySelectorAll("img");
+const processedImages = new Set();
 
-console.log(`Found ${images.length} images on this page.`);
+function processImage(image) {
+    if (processedImages.has(image)) {
+        return;
+    }
 
-const candidates = [];
+    processedImages.add(image);
 
-for (let i = 0; i < images.length; i++) {
-    console.log("Image", i);
+    console.log("Processing image:", image.src);
 
-    console.log("URL:", images[i].src);
-    console.log("Width:", images[i].width);
-    console.log("Height:", images[i].height);
-    console.log("Natural width:", images[i].naturalWidth);
-    console.log("Natural height:", images[i].naturalHeight);
+    const rect = image.getBoundingClientRect();
 
-    const aspectRatio = images[i].width / images[i].height;
-    console.log("Aspect ratio:", aspectRatio);
+    const aspectRatio = image.width / image.height;
 
-    const rect = images[i].getBoundingClientRect();
+    const isVisible =
+        rect.top < window.innerHeight &&
+        rect.bottom > 0;
 
-    const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-
-    console.log("Position:", rect.x, rect.y);
     console.log("Displayed size:", rect.width, rect.height);
+    console.log("Natural size:", image.naturalWidth, image.naturalHeight);
+    console.log("Aspect ratio:", aspectRatio);
     console.log("Visible:", isVisible);
 
     if (
@@ -32,32 +30,71 @@ for (let i = 0; i < images.length; i++) {
         rect.height > 250 &&
         aspectRatio < 1
     ) {
-        candidates.push(images[i]);
-        console.log("Possible manga image:", i);
-        console.log("Candidate URL:", images[i].src);
+        console.log("Possible manga image:", image.src);
+
+        fetch(image.src)
+            .then(response => {
+                console.log("Image response:", response);
+                console.log("Status:", response.status);
+
+                return response.blob();
+            })
+            .then(blob => {
+                console.log("Image blob:", blob);
+                console.log("Blob size:", blob.size);
+                console.log("Blob type:", blob.type);
+
+                const imageURL = URL.createObjectURL(blob);
+
+                console.log("Temporary image URL:", imageURL);
+
+                const loadedImage = new Image();
+
+                loadedImage.onload = () => {
+                    console.log("Image loaded successfully.");
+                    console.log(
+                        "Natural width:",
+                        loadedImage.naturalWidth
+                    );
+                    console.log(
+                        "Natural height:",
+                        loadedImage.naturalHeight
+                    );
+                };
+
+                loadedImage.onerror = () => {
+                    console.error("Failed to load image from Blob URL.");
+                };
+
+                loadedImage.src = imageURL;
+            })
+            .catch(error => {
+                console.error("Failed to fetch image:", error);
+            });
     }
 }
 
-console.log("Total candidates:", candidates.length);
+function findImages() {
+    const images = document.querySelectorAll("img");
 
-if (candidates.length > 0) {
-    fetch(candidates[0].src)
-        .then(response => {
-            console.log("Image response:", response);
-            console.log("Status:", response.status);
+    console.log(`Found ${images.length} images on this page.`);
 
-            return response.blob();
-        })
-        .then(blob => {
-            console.log("Image blob:", blob);
-            console.log("Blob size:", blob.size);
-            console.log("Blob type:", blob.type);
-
-            const imageURL = URL.createObjectURL(blob);
-
-            console.log("Temporary image URL:", imageURL);
-        })
-        .catch(error => {
-            console.error("Failed to fetch image:", error);
-        });
+    images.forEach(image => {
+        processImage(image);
+    });
 }
+
+// Initial scan
+findImages();
+
+// Watch for images added later
+const observer = new MutationObserver(() => {
+    findImages();
+});
+
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
+console.log("Image observer started.");
