@@ -13,7 +13,6 @@ function processImage(image) {
 
     const rect = image.getBoundingClientRect();
     const aspectRatio = image.width / image.height;
-
     const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
 
     console.log("Displayed size:", rect.width, rect.height);
@@ -53,7 +52,7 @@ function processImage(image) {
                     loadedImage.dataset.mangaTranslatorImage = "true";
                     console.log("Image ready for processing:", loadedImage);
 
-                    // Create canvas
+                    // STEP 5: Create canvas
 
                     const canvas = document.createElement("canvas");
                     const context = canvas.getContext("2d");
@@ -68,9 +67,14 @@ function processImage(image) {
                     context.drawImage(loadedImage, 0, 0);
                     console.log("Image drawn onto canvas.");
 
-                    // Get pixel data
+                    // STEP 6: Get pixel data
 
-                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const imageData = context.getImageData(
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    );
 
                     console.log("Pixel data:", imageData);
                     console.log("Pixel data length:", imageData.data.length);
@@ -84,7 +88,7 @@ function processImage(image) {
 
                     console.log("First pixel:", firstPixel);
 
-                    // Convert to grayscale
+                    // STEP 7: Convert to grayscale
 
                     const grayCanvas = document.createElement("canvas");
 
@@ -93,7 +97,10 @@ function processImage(image) {
 
                     const grayContext = grayCanvas.getContext("2d");
 
-                    const grayImageData = grayContext.createImageData(canvas.width, canvas.height);
+                    const grayImageData = grayContext.createImageData(
+                        canvas.width,
+                        canvas.height
+                    );
 
                     for (let i = 0; i < imageData.data.length; i += 4) {
                         const red = imageData.data[i];
@@ -101,7 +108,11 @@ function processImage(image) {
                         const blue = imageData.data[i + 2];
                         const alpha = imageData.data[i + 3];
 
-                        const gray = Math.round(0.299 * red + 0.587 * green + 0.114 * blue);
+                        const gray = Math.round(
+                            0.299 * red +
+                            0.587 * green +
+                            0.114 * blue
+                        );
 
                         grayImageData.data[i] = gray;
                         grayImageData.data[i + 1] = gray;
@@ -113,35 +124,210 @@ function processImage(image) {
 
                     console.log("Grayscale conversion complete.");
 
-                    // Convert grayscale canvas to Blob
+                    // DAY 7 - STEP 1: Analyze grayscale pixels
+
+                    let darkPixels = 0;
+                    let lightPixels = 0;
+
+                    for (let i = 0; i < grayImageData.data.length; i += 4) {
+                        const gray = grayImageData.data[i];
+
+                        if (gray < 128) {
+                            darkPixels++;
+                        } else {
+                            lightPixels++;
+                        }
+                    }
+
+                    const totalPixels = grayImageData.data.length / 4;
+
+                    console.log("Total pixels:", totalPixels);
+                    console.log("Dark pixels:", darkPixels);
+                    console.log("Light pixels:", lightPixels);
+                    console.log(
+                        "Dark pixel percentage:",
+                        (darkPixels / totalPixels) * 100
+                    );
+
+                    // DAY 7 - STEP 2: Find dark pixel boundaries
+
+                    const threshold = 128;
+
+                    let minX = grayCanvas.width;
+                    let minY = grayCanvas.height;
+                    let maxX = 0;
+                    let maxY = 0;
+
+                    let foundDarkPixel = false;
+
+                    for (let y = 0; y < grayCanvas.height; y++) {
+                        for (let x = 0; x < grayCanvas.width; x++) {
+                            const index =
+                                (y * grayCanvas.width + x) * 4;
+
+                            const gray = grayImageData.data[index];
+
+                            if (gray < threshold) {
+                                foundDarkPixel = true;
+
+                                if (x < minX) minX = x;
+                                if (x > maxX) maxX = x;
+                                if (y < minY) minY = y;
+                                if (y > maxY) maxY = y;
+                            }
+                        }
+                    }
+
+                    if (foundDarkPixel) {
+                        const width = maxX - minX + 1;
+                        const height = maxY - minY + 1;
+
+                        console.log("Dark pixel boundary found.");
+                        console.log("Min X:", minX);
+                        console.log("Min Y:", minY);
+                        console.log("Max X:", maxX);
+                        console.log("Max Y:", maxY);
+                        console.log("Bounding box width:", width);
+                        console.log("Bounding box height:", height);
+                    } else {
+                        console.log("No dark pixels found.");
+                    }
+
+                    // DAY 7 - STEP 3 & 4: Find possible text regions
+
+                    const regionSize = 50;
+                    const minDarkPercentage = 5;
+                    const maxDarkPercentage = 60;
+
+                    const possibleTextRegions = [];
+
+                    for (let y = 0; y < grayCanvas.height; y += regionSize) {
+                        for (let x = 0; x < grayCanvas.width; x += regionSize) {
+                            let darkCount = 0;
+                            let pixelCount = 0;
+
+                            const regionWidth = Math.min(
+                                regionSize,
+                                grayCanvas.width - x
+                            );
+
+                            const regionHeight = Math.min(
+                                regionSize,
+                                grayCanvas.height - y
+                            );
+
+                            for (
+                                let regionY = y;
+                                regionY < y + regionHeight;
+                                regionY++
+                            ) {
+                                for (
+                                    let regionX = x;
+                                    regionX < x + regionWidth;
+                                    regionX++
+                                ) {
+                                    const index =
+                                        (regionY * grayCanvas.width + regionX) * 4;
+
+                                    const gray =
+                                        grayImageData.data[index];
+
+                                    pixelCount++;
+
+                                    if (gray < threshold) {
+                                        darkCount++;
+                                    }
+                                }
+                            }
+
+                            const darkPercentage =
+                                (darkCount / pixelCount) * 100;
+
+                            console.log(
+                                `Region (${x}, ${y}) - Dark pixels: ${darkPercentage.toFixed(2)}%`
+                            );
+
+                            if (
+                                darkPercentage >= minDarkPercentage &&
+                                darkPercentage <= maxDarkPercentage
+                            ) {
+                                const region = {
+                                    x: x,
+                                    y: y,
+                                    width: regionWidth,
+                                    height: regionHeight,
+                                    darkPercentage: darkPercentage
+                                };
+
+                                possibleTextRegions.push(region);
+
+                                console.log(
+                                    "Possible text region:",
+                                    region
+                                );
+                            }
+                        }
+                    }
+
+                    console.log(
+                        "Total possible text regions:",
+                        possibleTextRegions.length
+                    );
+
+                    // STEP 8: Convert grayscale canvas to Blob
 
                     grayCanvas.toBlob((grayBlob) => {
                         console.log("Grayscale blob:", grayBlob);
 
                         if (!grayBlob) {
-                            console.error("Failed to create grayscale blob.");
+                            console.error(
+                                "Failed to create grayscale blob."
+                            );
                             return;
                         }
 
-                        console.log("Grayscale blob size:", grayBlob.size);
-                        console.log("Grayscale blob type:", grayBlob.type);
+                        console.log(
+                            "Grayscale blob size:",
+                            grayBlob.size
+                        );
 
-                        const grayscaleURL = URL.createObjectURL(grayBlob);
+                        console.log(
+                            "Grayscale blob type:",
+                            grayBlob.type
+                        );
 
-                        console.log("Grayscale image URL:", grayscaleURL);
+                        const grayscaleURL =
+                            URL.createObjectURL(grayBlob);
 
-                        // Load processed image
+                        console.log(
+                            "Grayscale image URL:",
+                            grayscaleURL
+                        );
+
+                        // STEP 9: Load processed image
 
                         const processedImage = new Image();
 
                         processedImage.onload = () => {
-                            console.log("Processed image loaded successfully.");
-                            console.log("Processed image width:", processedImage.naturalWidth);
-                            console.log("Processed image height:", processedImage.naturalHeight);
+                            console.log(
+                                "Processed image loaded successfully."
+                            );
+
+                            console.log(
+                                "Processed image width:",
+                                processedImage.naturalWidth
+                            );
+
+                            console.log(
+                                "Processed image height:",
+                                processedImage.naturalHeight
+                            );
                         };
 
                         processedImage.onerror = () => {
-                            console.error("Failed to load processed grayscale image.");
+                            console.error(
+                                "Failed to load processed grayscale image."
+                            );
                         };
 
                         processedImage.src = grayscaleURL;
@@ -149,13 +335,18 @@ function processImage(image) {
                 };
 
                 loadedImage.onerror = () => {
-                    console.error("Failed to load image from Blob URL.");
+                    console.error(
+                        "Failed to load image from Blob URL."
+                    );
                 };
 
                 loadedImage.src = imageURL;
             })
             .catch(error => {
-                console.error("Failed to fetch image:", error);
+                console.error(
+                    "Failed to fetch image:",
+                    error
+                );
             });
     }
 }
@@ -163,7 +354,9 @@ function processImage(image) {
 function findImages() {
     const images = document.querySelectorAll("img");
 
-    console.log(`Found ${images.length} images on this page.`);
+    console.log(
+        `Found ${images.length} images on this page.`
+    );
 
     images.forEach(image => {
         processImage(image);
@@ -171,6 +364,7 @@ function findImages() {
 }
 
 // Initial scan
+
 findImages();
 
 // Watch for dynamically added images
