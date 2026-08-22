@@ -50,8 +50,6 @@ function processImage(image) {
                     loadedImage.dataset.mangaTranslatorImage = "true";
                     console.log("Image ready for processing:", loadedImage);
 
-                    // STEP 5: Create canvas
-
                     const canvas = document.createElement("canvas");
                     const context = canvas.getContext("2d");
 
@@ -64,8 +62,6 @@ function processImage(image) {
 
                     context.drawImage(loadedImage, 0, 0);
                     console.log("Image drawn onto canvas.");
-
-                    // STEP 6: Get pixel data
 
                     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
 
@@ -81,14 +77,11 @@ function processImage(image) {
 
                     console.log("First pixel:", firstPixel);
 
-                    // STEP 7: Convert to grayscale
-
                     const grayCanvas = document.createElement("canvas");
                     grayCanvas.width = canvas.width;
                     grayCanvas.height = canvas.height;
 
                     const grayContext = grayCanvas.getContext("2d");
-
                     const grayImageData = grayContext.createImageData(canvas.width, canvas.height);
 
                     for (let i = 0; i < imageData.data.length; i += 4) {
@@ -109,8 +102,6 @@ function processImage(image) {
 
                     console.log("Grayscale conversion complete.");
 
-                    // DAY 7 - STEP 1: Analyze grayscale pixels
-
                     let darkPixels = 0;
                     let lightPixels = 0;
 
@@ -130,8 +121,6 @@ function processImage(image) {
                     console.log("Dark pixels:", darkPixels);
                     console.log("Light pixels:", lightPixels);
                     console.log("Dark pixel percentage:", (darkPixels / totalPixels) * 100);
-
-                    // DAY 7 - STEP 2: Find dark pixel boundaries
 
                     const threshold = 128;
 
@@ -171,8 +160,6 @@ function processImage(image) {
                     } else {
                         console.log("No dark pixels found.");
                     }
-
-                    // DAY 7 - STEP 3 & 4: Find possible text regions
 
                     const regionSize = 50;
                     const minDarkPercentage = 5;
@@ -221,8 +208,6 @@ function processImage(image) {
 
                     console.log("Total possible text regions:", possibleTextRegions.length);
 
-                    // DAY 8 - STEP 1: Create detection canvas
-
                     const detectionCanvas = document.createElement("canvas");
                     detectionCanvas.width = grayCanvas.width;
                     detectionCanvas.height = grayCanvas.height;
@@ -233,7 +218,8 @@ function processImage(image) {
 
                     console.log("Detection canvas created.");
 
-                    // DAY 8 - STEP 2: Draw detected regions
+                    detectionContext.strokeStyle = "red";
+                    detectionContext.lineWidth = 2;
 
                     possibleTextRegions.forEach(region => {
                         detectionContext.strokeRect(region.x, region.y, region.width, region.height);
@@ -241,23 +227,28 @@ function processImage(image) {
 
                     console.log("Detection regions drawn.");
 
-                    // DAY 8 - STEP 3: Create detection image
+                    const overlayURL = detectionCanvas.toDataURL("image/png");
 
-                    const detectionImage = new Image();
+                    const overlay = document.createElement("img");
+                    overlay.src = overlayURL;
+                    overlay.style.position = "absolute";
+                    overlay.style.left = "0";
+                    overlay.style.top = "0";
+                    overlay.style.width = "100%";
+                    overlay.style.height = "100%";
+                    overlay.style.pointerEvents = "none";
+                    overlay.style.zIndex = "999999";
 
-                    detectionImage.onload = () => {
-                        console.log("Detection image loaded.");
-                        console.log("Detection image width:", detectionImage.naturalWidth);
-                        console.log("Detection image height:", detectionImage.naturalHeight);
-                    };
+                    const imageContainer = document.createElement("div");
+                    imageContainer.style.position = "relative";
+                    imageContainer.style.width = image.offsetWidth + "px";
+                    imageContainer.style.height = image.offsetHeight + "px";
 
-                    detectionImage.onerror = () => {
-                        console.error("Failed to load detection image.");
-                    };
+                    image.parentNode.insertBefore(imageContainer, image);
+                    imageContainer.appendChild(image);
+                    imageContainer.appendChild(overlay);
 
-                    detectionImage.src = detectionCanvas.toDataURL("image/png");
-
-                    // Convert grayscale canvas to Blob
+                    console.log("Detection overlay displayed.");
 
                     grayCanvas.toBlob(grayBlob => {
                         console.log("Grayscale blob:", grayBlob);
@@ -273,8 +264,6 @@ function processImage(image) {
                         const grayscaleURL = URL.createObjectURL(grayBlob);
 
                         console.log("Grayscale image URL:", grayscaleURL);
-
-                        // STEP 9: Load processed image
 
                         const processedImage = new Image();
 
@@ -314,11 +303,7 @@ function findImages() {
     });
 }
 
-// Initial scan
-
 findImages();
-
-// Watch for dynamically added images
 
 const observer = new MutationObserver(() => {
     findImages();
