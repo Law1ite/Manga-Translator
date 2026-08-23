@@ -250,6 +250,47 @@ function processImage(image) {
 
                     console.log("Detection overlay displayed.");
 
+                    const debugCanvas = document.createElement("canvas");
+                    debugCanvas.width = detectionCanvas.width;
+                    debugCanvas.height = detectionCanvas.height;
+
+                    const debugContext = debugCanvas.getContext("2d");
+                    const debugImageData = debugContext.createImageData(debugCanvas.width, debugCanvas.height);
+
+                    for (let i = 0; i < grayImageData.data.length; i += 4) {
+                        const gray = grayImageData.data[i];
+
+                        if (gray < threshold) {
+                            debugImageData.data[i] = 0;
+                            debugImageData.data[i + 1] = 0;
+                            debugImageData.data[i + 2] = 0;
+                            debugImageData.data[i + 3] = 255;
+                        } else {
+                            debugImageData.data[i] = 255;
+                            debugImageData.data[i + 1] = 255;
+                            debugImageData.data[i + 2] = 255;
+                            debugImageData.data[i + 3] = 255;
+                        }
+                    }
+
+                    debugContext.putImageData(debugImageData, 0, 0);
+
+                    console.log("Debug pixel image created.");
+
+                    const debugURL = debugCanvas.toDataURL("image/png");
+
+                    const debugImage = document.createElement("img");
+                    debugImage.src = debugURL;
+                    debugImage.style.display = "block";
+                    debugImage.style.width = image.offsetWidth + "px";
+                    debugImage.style.height = image.offsetHeight + "px";
+                    debugImage.style.marginTop = "10px";
+                    debugImage.style.border = "2px solid blue";
+
+                    imageContainer.parentNode.insertBefore(debugImage, imageContainer.nextSibling);
+
+                    console.log("Debug pixel image displayed.");
+
                     grayCanvas.toBlob(grayBlob => {
                         console.log("Grayscale blob:", grayBlob);
 
