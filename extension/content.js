@@ -1,6 +1,7 @@
 console.log("Manga Translator content script loaded.");
 
 const processedImages = new Set();
+const processedContainers = new Set();
 
 function processImage(image) {
     if (processedImages.has(image)) return;
@@ -48,7 +49,6 @@ function processImage(image) {
                     console.log("Natural height:", loadedImage.naturalHeight);
 
                     loadedImage.dataset.mangaTranslatorImage = "true";
-                    console.log("Image ready for processing:", loadedImage);
 
                     const canvas = document.createElement("canvas");
                     const context = canvas.getContext("2d");
@@ -61,6 +61,7 @@ function processImage(image) {
                     console.log("Canvas height:", canvas.height);
 
                     context.drawImage(loadedImage, 0, 0);
+
                     console.log("Image drawn onto canvas.");
 
                     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -201,6 +202,7 @@ function processImage(image) {
                                 };
 
                                 possibleTextRegions.push(region);
+
                                 console.log("Possible text region:", region);
                             }
                         }
@@ -208,15 +210,27 @@ function processImage(image) {
 
                     console.log("Total possible text regions:", possibleTextRegions.length);
 
+                    const imageContainer = document.createElement("div");
+
+                    imageContainer.style.position = "relative";
+                    imageContainer.style.width = image.offsetWidth + "px";
+                    imageContainer.style.height = image.offsetHeight + "px";
+
+                    imageContainer.dataset.mangaTranslatorContainer = "true";
+
+                    image.parentNode.insertBefore(imageContainer, image);
+                    imageContainer.appendChild(image);
+
                     const detectionCanvas = document.createElement("canvas");
-                    detectionCanvas.width = grayCanvas.width;
-                    detectionCanvas.height = grayCanvas.height;
+
+                    detectionCanvas.width = canvas.width;
+                    detectionCanvas.height = canvas.height;
 
                     const detectionContext = detectionCanvas.getContext("2d");
 
-                    detectionContext.drawImage(grayCanvas, 0, 0);
-
                     console.log("Detection canvas created.");
+
+                    detectionContext.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height);
 
                     detectionContext.strokeStyle = "red";
                     detectionContext.lineWidth = 2;
@@ -227,10 +241,11 @@ function processImage(image) {
 
                     console.log("Detection regions drawn.");
 
-                    const overlayURL = detectionCanvas.toDataURL("image/png");
+                    const overlay = document.createElement("canvas");
 
-                    const overlay = document.createElement("img");
-                    overlay.src = overlayURL;
+                    overlay.width = canvas.width;
+                    overlay.height = canvas.height;
+
                     overlay.style.position = "absolute";
                     overlay.style.left = "0";
                     overlay.style.top = "0";
@@ -239,20 +254,23 @@ function processImage(image) {
                     overlay.style.pointerEvents = "none";
                     overlay.style.zIndex = "999999";
 
-                    const imageContainer = document.createElement("div");
-                    imageContainer.style.position = "relative";
-                    imageContainer.style.width = image.offsetWidth + "px";
-                    imageContainer.style.height = image.offsetHeight + "px";
+                    const overlayContext = overlay.getContext("2d");
 
-                    image.parentNode.insertBefore(imageContainer, image);
-                    imageContainer.appendChild(image);
+                    overlayContext.strokeStyle = "red";
+                    overlayContext.lineWidth = 2;
+
+                    possibleTextRegions.forEach(region => {
+                        overlayContext.strokeRect(region.x, region.y, region.width, region.height);
+                    });
+
                     imageContainer.appendChild(overlay);
 
                     console.log("Detection overlay displayed.");
 
                     const debugCanvas = document.createElement("canvas");
-                    debugCanvas.width = detectionCanvas.width;
-                    debugCanvas.height = detectionCanvas.height;
+
+                    debugCanvas.width = grayCanvas.width;
+                    debugCanvas.height = grayCanvas.height;
 
                     const debugContext = debugCanvas.getContext("2d");
                     const debugImageData = debugContext.createImageData(debugCanvas.width, debugCanvas.height);
@@ -277,19 +295,22 @@ function processImage(image) {
 
                     console.log("Debug pixel image created.");
 
-                    const debugURL = debugCanvas.toDataURL("image/png");
+                    if (!imageContainer.nextElementSibling || imageContainer.nextElementSibling.dataset.mangaTranslatorDebug !== "true") {
+                        const debugImage = document.createElement("img");
 
-                    const debugImage = document.createElement("img");
-                    debugImage.src = debugURL;
-                    debugImage.style.display = "block";
-                    debugImage.style.width = image.offsetWidth + "px";
-                    debugImage.style.height = image.offsetHeight + "px";
-                    debugImage.style.marginTop = "10px";
-                    debugImage.style.border = "2px solid blue";
+                        debugImage.src = debugCanvas.toDataURL("image/png");
+                        debugImage.style.display = "block";
+                        debugImage.style.width = image.offsetWidth + "px";
+                        debugImage.style.height = image.offsetHeight + "px";
+                        debugImage.style.marginTop = "10px";
+                        debugImage.style.border = "2px solid blue";
 
-                    imageContainer.parentNode.insertBefore(debugImage, imageContainer.nextSibling);
+                        debugImage.dataset.mangaTranslatorDebug = "true";
 
-                    console.log("Debug pixel image displayed.");
+                        imageContainer.parentNode.insertBefore(debugImage, imageContainer.nextSibling);
+
+                        console.log("Debug pixel image displayed.");
+                    }
 
                     grayCanvas.toBlob(grayBlob => {
                         console.log("Grayscale blob:", grayBlob);
@@ -340,7 +361,10 @@ function findImages() {
     console.log(`Found ${images.length} images on this page.`);
 
     images.forEach(image => {
+        if (image.dataset.mangaTranslatorProcessed === "true") return;
+
         processImage(image);
+        image.dataset.mangaTranslatorProcessed = "true";
     });
 }
 
