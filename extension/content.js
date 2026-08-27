@@ -193,17 +193,43 @@ function processImage(image) {
                             console.log(`Region (${x}, ${y}) - Dark pixels: ${darkPercentage.toFixed(2)}%`);
 
                             if (darkPercentage >= minDarkPercentage && darkPercentage <= maxDarkPercentage) {
-                                const region = {
-                                    x: x,
-                                    y: y,
-                                    width: regionWidth,
-                                    height: regionHeight,
-                                    darkPercentage: darkPercentage
-                                };
+                                let regionMinX = regionWidth;
+                        let regionMinY = regionHeight;
+                        let regionMaxX = 0;
+                        let regionMaxY = 0;
+                        let regionHasDarkPixel = false;
 
-                                possibleTextRegions.push(region);
+                        for (let regionY = y; regionY < y + regionHeight; regionY++) {
+                            for (let regionX = x; regionX < x + regionWidth; regionX++) {
+                                const index = (regionY * grayCanvas.width + regionX) * 4;
+                                const gray = grayImageData.data[index];
 
-                                console.log("Possible text region:", region);
+                                if (gray < threshold) {
+                                    regionHasDarkPixel = true;
+
+                                    const localX = regionX - x;
+                                    const localY = regionY - y;
+
+                                    if (localX < regionMinX) regionMinX = localX;
+                                    if (localX > regionMaxX) regionMaxX = localX;
+                                    if (localY < regionMinY) regionMinY = localY;
+                                    if (localY > regionMaxY) regionMaxY = localY;
+                                }
+                            }
+                        }
+
+                        if (regionHasDarkPixel) {
+                            const tightRegion = {
+                                x: x + regionMinX,
+                                y: y + regionMinY,
+                                width: regionMaxX - regionMinX + 1,
+                                height: regionMaxY - regionMinY + 1,
+                                darkPercentage: darkPercentage
+                            };
+
+                            possibleTextRegions.push(tightRegion);
+                            console.log("Tight text region:", tightRegion);
+}
                             }
                         }
                     }
