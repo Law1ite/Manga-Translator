@@ -2,33 +2,30 @@
   "manifest_version": 3,
   "name": "Manga Translator",
   "version": "1.0.0",
-  "description": "Translate text from manga images.",
-
-  "icons": {
-    "16": "icons/crest-16.png",
-    "32": "icons/crest-32.png",
-    "48": "icons/crest-48.png",
-    "128": "icons/crest-128.png"
-  },
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icons/crest-16.png",
-      "32": "icons/crest-32.png",
-      "48": "icons/crest-48.png",
-      "128": "icons/crest-128.png"
-    }
-  },
-
+  "description": "Detects manga text, performs OCR, and translates it.",
   "permissions": [
-    "activeTab",
-    "scripting"
+    "storage",
+    "activeTab"
   ],
-
+  "host_permissions": [
+    "https://translation.googleapis.com/*",
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
     }
   ]
 }

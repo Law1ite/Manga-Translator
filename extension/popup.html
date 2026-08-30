@@ -1,16 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Manga Translator</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
     <h2>Manga Translator</h2>
 
-    <button id="translateBtn">
-        Translate Manga
+    <label for="apiKey">
+        Google Translate API Key
+    </label>
+
+    <input
+        id="apiKey"
+        type="password"
+        placeholder="a502f3a05dmsh376986561f2499cp179e02jsn85b6152db40a"
+    >
+
+    <button id="save">
+        Save API Key
     </button>
+
+    <button id="translate">
+        Translate
+    </button>
+
+    <p id="status"></p>
 
     <script src="popup.js"></script>
 </body>
